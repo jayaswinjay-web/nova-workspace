@@ -1,0 +1,21 @@
+<Application
+    x:Class="Nova.Hub.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Nova.Hub">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- WinUI 3 Default Styles -->
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Shared Styles -->
+                <ResourceDictionary Source="ms-appx:///Nova.UI.Shared/SharedStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- App-specific resources -->
+            <SolidColorBrush x:Key="WindowCaptionBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="WindowCaptionForeground" Color="{ThemeResource TextFillColorPrimaryBrush}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

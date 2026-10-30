@@ -1,0 +1,73 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+*.nupkg
+*.snupkg
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# MSIX
+AppPackages/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Local settings
+*.local.props
+*.local.targets
+Directory.Build.local.props
+Directory.Build.local.targets
+
+# User secrets
+secrets.json
+appsecrets.json
+
+# Profiling
+*.prof
+*.dtrace
+*.perf
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/

@@ -1,0 +1,61 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    
+    <!-- Common properties -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- Windows App SDK -->
+    <WindowsAppSDKVersion>1.6.241118000</WindowsAppSDKVersion>
+    <WindowsSDKBuildToolsVersion>10.0.26100.1742</WindowsSDKBuildToolsVersion>
+    
+    <!-- Package versions -->
+    <CommunityToolkitMvvmVersion>8.3.2</CommunityToolkitMvvmVersion>
+    <CommunityToolkitWinUIVersion>8.1.241101</CommunityToolkitWinUIVersion>
+    <MicrosoftExtensionsDIVersion>8.0.0</MicrosoftExtensionsDIVersion>
+    <MicrosoftExtensionsLoggingVersion>8.0.0</MicrosoftExtensionsLoggingVersion>
+    <SerilogVersion>4.2.0</SerilogVersion>
+    <SerilogSinksFileVersion>6.0.0</SerilogSinksFileVersion>
+    <DocumentFormatOpenXmlVersion>3.2.0</DocumentFormatOpenXmlVersion>
+    <PDFsharpVersion>6.2.0</PDFsharpVersion>
+    <UglyToadPdfPigVersion>0.1.8</UglyToadPdfPigVersion>
+    <Win2DVersion>1.3.0.1</Win2DVersion>
+    <LiveChartsCoreVersion>2.0.0-rc5.4</LiveChartsCoreVersion>
+    <SkiaSharpVersion>3.116.1</SkiaSharpVersion>
+    <SystemTextJsonVersion>8.0.0</SystemTextJsonVersion>
+    <XunitVersion>2.9.0</XunitVersion>
+    <XunitRunnerVersion>2.8.2</XunitRunnerVersion>
+    <MicrosoftTestSdkVersion>17.11.1</MicrosoftTestSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Central Package References -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="$(CommunityToolkitMvvmVersion)" />
+    <PackageVersion Include="CommunityToolkit.WinUI" Version="$(CommunityToolkitWinUIVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDIVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsLoggingVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(MicrosoftExtensionsLoggingVersion)" />
+    <PackageVersion Include="Serilog" Version="$(SerilogVersion)" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="$(SerilogSinksFileVersion)" />
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="$(DocumentFormatOpenXmlVersion)" />
+    <PackageVersion Include="PDFsharp" Version="$(PDFsharpVersion)" />
+    <PackageVersion Include="UglyToad.PdfPig" Version="$(UglyToadPdfPigVersion)" />
+    <PackageVersion Include="Microsoft.Graphics.Win2D" Version="$(Win2DVersion)" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView.WinUI" Version="$(LiveChartsCoreVersion)" />
+    <PackageVersion Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
+    <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="$(XunitRunnerVersion)" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="$(WindowsAppSDKVersion)" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="$(WindowsSDKBuildToolsVersion)" />
+  </ItemGroup>
+</Project>

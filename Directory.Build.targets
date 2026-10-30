@@ -1,0 +1,23 @@
+<Project>
+  <PropertyGroup>
+    <!-- MSIX Packaging -->
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageDir>$(MSBuildThisFileDirectory)artifacts\msix\$(Configuration)\</AppxPackageDir>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x64|ARM64</AppxBundlePlatforms>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+  </PropertyGroup>
+
+  <Target Name="CopyAssets" AfterTargets="Build" Condition="'$(OutputType)' == 'WinExe'">
+    <ItemGroup>
+      <AppAssets Include="$(MSBuildThisFileDirectory)assets\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppAssets)" DestinationFolder="$(OutDir)Assets\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CreateAppIcons" BeforeTargets="Build" Condition="'$(OutputType)' == 'WinExe'">
+    <!-- This would generate icons from SVG in a real build -->
+    <!-- For now, we'll just ensure the Assets folder exists -->
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Assets" />
+  </Target>
+</Project>
