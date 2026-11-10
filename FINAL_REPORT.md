@@ -1,295 +1,198 @@
-# NOVA Office - Final Report
+# NOVA Workspace — final report
 
-## Project Overview
+**NOVA Workspace** is one native Windows office suite: **NOVA Write**, **NOVA Grid**,
+**NOVA Deck** and **NOVA PDF**, started from a single home screen, **NOVA Desk**.
 
-NOVA Office is a complete, native Windows office suite built with WinUI 3, .NET 8 (LTS), and Windows App SDK 1.6. It consists of five applications sharing a common core:
-
-1. **NOVA Hub** - Launcher/start screen
-2. **NOVA Write** - Word processor (.docx, .rtf, .txt)
-3. **NOVA Grid** - Spreadsheet (.xlsx, .csv)
-4. **NOVA Deck** - Presentations (.pptx)
-5. **NOVA PDF** - PDF viewer & editor (.pdf)
-
-## Architecture
-
-### Solution Structure
-```
-NovaOffice.sln
-├── src/
-│   ├── Nova.Core/          # Shared core services (DI, logging, settings, undo/redo, autosave, crash recovery)
-│   ├── Nova.UI.Shared/     # Shared UI components (ribbon, command palette, backstage, theming, title bar)
-│   ├── Nova.Formats/       # Document import/export (OpenXML, PDFsharp, PdfPig)
-│   ├── Nova.Formula/       # Spreadsheet formula engine (tokenizer, parser, AST, evaluator, 50+ functions)
-│   ├── Nova.Hub/           # Launcher application
-│   ├── Nova.Write/         # Word processor
-│   ├── Nova.Grid/          # Spreadsheet with Win2D virtualized grid
-│   ├── Nova.Deck/          # Presentation editor
-│   └── Nova.Pdf/           # PDF viewer/editor
-└── tests/
-    ├── Nova.Core.Tests/
-    ├── Nova.Formats.Tests/
-    ├── Nova.Formula.Tests/
-    └── Nova.Pdf.Tests/
-```
-
-### Design System - "Futuristic Fluent"
-- **Mica Alt** backdrop on Windows 11, **Acrylic** fallback on Windows 10
-- Custom title bars with app icon, document name, search, save status
-- **Fluent 2**: 8px rounded corners, layered surfaces, soft elevation shadows
-- **Segoe UI Variable** typography with clear type ramp
-- **Segoe Fluent Icons** throughout
-- **Signature accents**: Write=Electric Blue, Grid=Emerald, Deck=Amber, PDF=Crimson, Hub=Violet
-- Light/Dark/High Contrast themes following system preference
-- Respects `UISettings.AnimationsEnabled` for reduced motion
-- 4px spacing grid, generous whitespace
-
-## Core Services (Nova.Core)
-
-### Settings Service
-- JSON-based persistence in `%LOCALAPPDATA%\NovaOffice\Settings.json`
-- Theme, default font, autosave interval, default folder, language
-- Change notifications via events
-
-### Recent Files Service
-- Cross-app recent files with thumbnails
-- Pinning support
-- Persisted in settings
-
-### Undo/Redo Service
-- Command pattern with unlimited history
-- Transaction support for grouping commands
-- Configurable max stack size (default 1000)
-
-### Autosave Service
-- Background timer (default 60s)
-- Saves to `%LOCALAPPDATA%\NovaOffice\AutoRecover\`
-- Per-document recovery files
-
-### Crash Recovery Service
-- Tracks session state in `session.json`
-- Detects previous crashes on startup
-- Integrates with autosave for document recovery
-
-## UI Shared Components (Nova.UI.Shared)
-
-### Theme Service
-- Mica/Acrylic backdrop management
-- Dynamic theme switching (System/Light/Dark/High Contrast)
-- Accent color management per app
-
-### Custom Title Bar
-- `ExtendsContentIntoTitleBar` with drag regions
-- App icon, document title, global search box, save status pill
-- Window controls (minimize, maximize, close)
-
-### Ribbon Control
-- Collapsible (Ctrl+F1 toggle) with compact/full modes
-- Tabbed interface (Home, Insert, Layout/Formulas/Design, Review, View)
-- Groups with various control types (buttons, toggles, dropdowns, galleries, comboboxes)
-- Data-driven via ViewModels
-
-### Command Palette
-- Ctrl+Shift+P / Alt+Q activation
-- Fuzzy search over all registered commands
-- Keyboard navigation (arrows, enter, escape)
-- Categories, shortcuts, descriptions
-
-### Backstage (File Menu)
-- Full-screen dialog with navigation pane
-- Pages: Home, New (template gallery), Open, Save As, Export, Print, Recent, Settings, About
-- Template gallery with live thumbnails
-- Recent files with pin/unpin/remove
-
-### Status Bars (per app)
-- Write: Page x of y, word/char count, proofing, language, view modes, zoom
-- Grid: Cell reference, SUM/AVG/COUNT/MIN/MAX, zoom, page break preview
-- Deck: Slide x of y, notes count, theme, layout, view modes, zoom
-- PDF: Page x of y, zoom, PDF version, security, view modes, zoom
-
-### Zoom Control
-- Slider with presets (25%-400%)
-- Text input with percentage
-- Fit Width / Fit Page buttons
-
-## Formula Engine (Nova.Formula)
-
-### Pipeline
-1. **Tokenizer** - Numbers, strings, booleans, errors, references, ranges, operators, functions
-2. **Parser** - Recursive descent with precedence climbing → AST
-3. **Dependency Graph** - Extracts cell references, builds DAG
-4. **Evaluator** - Visitor pattern with circular detection
-
-### Features
-- **References**: A1, $A$1, Sheet1!A1, A1:B10, cross-sheet
-- **Named ranges** with workbook/worksheet scope
-- **50+ Functions**: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, COUNTIF, SUMIF, AVERAGEIF, IF, IFS, AND, OR, NOT, IFERROR, VLOOKUP, HLOOKUP, XLOOKUP, INDEX, MATCH, ROUND, ROUNDUP, ROUNDDOWN, ABS, SQRT, POWER, MOD, CONCAT, TEXTJOIN, LEFT, RIGHT, MID, LEN, TRIM, UPPER, LOWER, TODAY, NOW, DATE, YEAR, MONTH, DAY, PMT, RAND, RANDBETWEEN
-- **Errors**: #DIV/0!, #REF!, #NAME?, #VALUE!, #N/A, #CIRC!
-- **Incremental recalculation** via topological sort
-- **Autocomplete** with signature tooltips
-
-## Document Formats (Nova.Formats)
-
-### OpenXML Import/Export
-- **Docx**: WordprocessingDocument
-- **Xlsx**: SpreadsheetDocument with shared strings, styles, formulas
-- **Pptx**: PresentationDocument with slides, layouts, themes
-
-### PDF Operations (PDFsharp + PdfPig)
-- Text extraction and search
-- Page rendering via `Windows.Data.Pdf`
-- Merge, split, extract, rotate pages
-- Annotations (highlight, underline, strikethrough, notes, shapes)
-- Form filling (AcroForm)
-- Password protection
-- Export to images (placeholder for Pdfium)
-
-### Other Formats
-- CSV, TXT, RTF support
-
-## Applications
-
-### NOVA Hub
-- Start screen with app tiles (animated)
-- Unified recent files across all apps with thumbnails
-- Template gallery with live previews
-- Quick actions (New Document, Open, Export, Settings)
-- Search across recent files
-
-### NOVA Write
-- **Editor**: WinUI `RichEditBox` with `ITextDocument`
-- **Views**: Print Layout, Read Mode, Focus Mode
-- **Formatting**: Font, size, bold/italic/underline/strike, sub/super, color, highlight, alignment, line spacing, indents, multi-level bullets/numbering, styles gallery (Normal, Title, Heading 1-3, Quote, Code), format painter
-- **Insert**: Images (resize, wrap), tables, hyperlinks, page breaks, page numbers, headers/footers, symbols, date/time
-- **Find/Replace**: Case, whole word, regex
-- **Spell Check**: Windows `ISpellChecker` with squiggles
-- **Navigation Pane**: From headings
-- **Export**: .docx, .rtf, .txt, .pdf
-
-### NOVA Grid
-- **Virtualized Grid**: Win2D `CanvasVirtualControl` for 60fps rendering
-- **Scale**: 1,000,000 rows × 16,384 columns (sparse `Dictionary<CellAddress, CellData>`)
-- **Features**: Freeze panes, drag-resize, auto-fit, hide/unhide, insert/delete rows/cols
-- **Sheets**: Add, rename, reorder (drag), tab color, delete
-- **Editing**: In-cell + formula bar + Name Box, fill handle (series, dates, copy)
-- **Formats**: General, Number, Currency, Percent, Date, Time, Text, Custom
-- **Styling**: Fonts, fill, borders, alignment, wrap, merge, conditional formatting (color scales, data bars, rules)
-- **Formula Engine**: Full Nova.Formula integration
-- **Data**: Multi-level sort, auto-filter dropdowns, find/replace
-- **Charts**: Column, bar, line, area, pie, doughnut, scatter (LiveChartsCore)
-- **Clipboard**: Excel-compatible TSV with reference adjustment
-- **Export**: .xlsx (formulas, styles, sheets), .csv, .pdf
-
-### NOVA Deck
-- **Thumbnail Rail**: Drag to reorder
-- **Slide Canvas**: Win2D, 16:9 / 4:3 aspect ratios
-- **Layouts**: Title, Title+Content, Two Content, Section Header, Blank, Picture with Caption
-- **Objects**: Rich text boxes, shapes (rect, rounded rect, ellipse, triangle, arrow, line, star), images, tables, charts
-- **Manipulation**: Move/resize/rotate handles, multi-select, align/distribute, group/ungroup, z-order, smart snapping guides
-- **Themes**: 6+ built-in (Office, Futuristic Glass, Dark Glass, Minimal Light, Minimal Dark, High Contrast)
-- **Transitions**: Fade, push, wipe, zoom, morph-style
-- **Animations**: Fade, fly in, zoom, appear with ordering/timing pane
-- **Slide Show**: Full-screen, presenter view on second monitor (current, next, notes, timer)
-- **Export**: .pptx, .pdf, .png per slide
-
-### NOVA PDF
-- **Viewer**: `Windows.Data.Pdf` rendering on background threads with page bitmap cache (LRU, 10 pages)
-- **Modes**: Continuous scroll, single page, two-page spread
-- **Zoom**: Fit width, fit page, custom (5%-1000%), pinch/Ctrl+wheel
-- **Sidebar**: Page thumbnails, bookmarks/outline, annotations list, search results
-- **Text**: Search with highlighted hits (PdfPig text layer), select/copy
-- **Annotations**: Highlight, underline, strikethrough, freehand ink, sticky notes, text boxes, shapes, stamps (saved as standard PDF annotations via PDFsharp)
-- **Organize**: Reorder (drag), rotate, delete, insert blank, extract, split, merge, insert from another PDF
-- **Forms**: Fill AcroForm text fields, checkboxes, radio buttons, dropdowns
-- **Sign**: Draw/type/image signature placement
-- **Convert**: Export pages to PNG/JPG, images → PDF, open PDF in Write (best-effort)
-- **Security**: Password prompt for protected PDFs
-- **Print**: Via `PrintManager` with preview
-- **Properties**: Title, author, page count, size, PDF version
-- **File Association**: Default handler for .pdf
-
-## Shared Features (All Apps)
-
-- **Unlimited Undo/Redo**: Command pattern per document
-- **Autosave**: Every 60s to AutoRecover folder
-- **Crash Recovery**: Prompt on next launch with recovery options
-- **TabView**: Multiple documents in one window + tear-off to new windows
-- **Print**: `PrintManager` with preview
-- **Drag & Drop**: Open files by dropping on window
-- **File Associations**: MSIX manifest (.docx/.rtf/.txt→Write, .xlsx/.csv→Grid, .pptx→Deck, .pdf→PDF)
-- **Settings**: Theme, default font, autosave interval, default folder, language
-- **Global Exception Handler**: Logs, saves recovery data, shows friendly dialog
-- **Fast Startup**: <1.5s on mid-range PC (lazy-loaded heavy services)
-
-## Code Quality
-
-- **MVVM**: Strict separation, code-behind only for view concerns (rendering, pointer input)
-- **Nullable Enabled**: `TreatWarningsAsErrors`
-- **Error Handling**: Every service method handles errors and logs via `ILogger`
-- **Async I/O**: UI thread never blocks (`DispatcherQueue` for UI updates)
-- **Tests**: 
-  - Formula: Every function + error cases + recalculation
-  - Formats: Docx/Xlsx/Pptx round-trips
-  - PDF: Merge/split/annotation round-trips
-
-## Packaging
-
-- **Primary**: MSIX bundle with multiple app entries
-- **Secondary**: Unpackaged self-contained builds
-- **Architectures**: x64, ARM64
-- **Target**: Windows 10 19041+, Windows 11
-- **Icons**: SVG source → PNG assets at all MSIX sizes (16, 24, 32, 48, 64, 128, 256, 512, 1024)
-
-## Known Limitations
-
-1. **PDF Rendering**: Uses `Windows.Data.Pdf` (system-provided) - quality depends on OS version
-2. **PDF to Image Export**: Requires Pdfium or similar - currently placeholder
-3. **Advanced Layout**: Write pagination uses simplified layout - complex tables/figures may not paginate perfectly
-4. **Chart Rendering**: LiveChartsCore.SkiaSharpView - some advanced chart types not implemented
-5. **Collaboration**: No real-time co-authoring (would require cloud backend)
-6. **Macros/VBA**: Not supported (security/complexity)
-7. **RTF Import/Export**: Basic support only
-8. **Accessibility**: Core support implemented, but some advanced ARIA patterns need refinement
-
-## Verification
-
-All components designed to be verified via:
-- Unit tests (xUnit) for formula engine, format converters, PDF operations
-- Integration tests for document round-trips
-- Manual verification of UI/UX flows
-- Performance benchmarks (1M row scroll, 500-page PDF)
-
-## Dependencies (All MIT/Apache/BSD Licensed)
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| CommunityToolkit.Mvvm | 8.3.2 | MVVM with source generators |
-| CommunityToolkit.WinUI | 8.1.241101 | Additional WinUI controls |
-| Microsoft.Extensions.DependencyInjection | 8.0.0 | DI container |
-| Microsoft.Extensions.Logging | 8.0.0 | Logging abstraction |
-| Serilog | 4.2.0 | Structured logging |
-| Serilog.Sinks.File | 6.0.0 | File logging sink |
-| DocumentFormat.OpenXml | 3.2.0 | OpenXML document manipulation |
-| PDFsharp | 6.2.0 | PDF creation/editing |
-| UglyToad.PdfPig | 0.1.8 | PDF text extraction |
-| Microsoft.Graphics.Win2D | 1.3.0.1 | High-performance 2D rendering |
-| LiveChartsCore.SkiaSharpView.WinUI | 2.0.0-rc5.4 | Charts |
-| SkiaSharp | 3.116.1 | 2D graphics for charts |
-| System.Text.Json | 8.0.0 | JSON serialization |
-| xunit | 2.9.0 | Unit testing |
-
-## Future Enhancements
-
-1. Real-time collaboration via Cloudflare Workers/Durable Objects
-2. AI-powered features (summarize, formula suggestions, slide design)
-3. Plugin system for extensions
-4. Web-based viewer companion
-5. Mobile/touch optimizations
-6. Advanced mail merge
-7. Pivot tables in Grid
-8. Master slides in Deck
-9. OCR for PDF text extraction
-10. Digital signatures with certificates
+No browser, no extension, no account, no cloud, no internet.
 
 ---
 
-**Built with ❤️ using WinUI 3, .NET 8, and the Windows App SDK**
+## What ships
+
+| | |
+|---|---|
+| `novadesk.exe` | NOVA Desk — the home screen (.NET Framework 4.8 WPF) |
+| `novawrite.exe` | NOVA Write — the word processor (native Rust) |
+| `novagrid.exe` | NOVA Grid — the spreadsheet (native Rust) |
+| `novadeck.exe` | NOVA Deck — the presentation app (native Rust) |
+| `novapdf.exe` | NOVA PDF — the PDF reader and tools (native Rust) |
+| `Start NOVA Desk.vbs` | The launcher (no console window; what the shortcuts use) |
+| `Start NOVA Desk.cmd` | Compatibility launcher (brief console window) |
+| `Install-NOVAWorkspace.cmd` | The optional per-user installer (`/assoc`, `/remove`) |
+| `Licenses/` | Each application's licence, notice and attribution, plus the vendored crates' |
+
+The download is `publish/NOVAWorkspace.zip` — **88.5 MB** (235 MB unpacked), one file, one set of
+binaries for Windows 7 SP1 through Windows 11, x64. NOVA Write carries its own fonts, Tamil
+included: Madhuram (TAU-Marutham) regular, bold and italic, and Tamil types on any keyboard with
+the Bamini layout.
+
+It is also served publicly from
+**https://nova-workspace.jayaswinjay.workers.dev** — a Cloudflare Worker with static
+assets, plus a `/download` route that streams the zip out of a **private** GitHub
+release. The GitHub token is a Worker secret; visitors never receive it. The
+streamed file was verified byte-for-byte against the local zip
+(SHA-256 `0D5A40F1…2B074494`, 92,765,065 bytes, release v1.0.6).
+
+---
+
+## Architecture
+
+```
+src/Nova.Hub/          NOVA Desk: the WPF home screen (net48, one build-time package reference)
+reference/wordcraft/   NOVA Write: the document model, layout, .docx/.rtf/.odt, rendering
+reference/gridcraft/   NOVA Grid: the formula engine, workbook model, .xlsx, charts
+reference/deckcraft/   NOVA Deck: the presentation model, .novadeck and .pptx, rendering
+reference/pdfcraft/    NOVA PDF: the PDF engine, .pdf I/O, forms, signatures, OCR
+assets/nova/           The NOVA mark icons (16…1024 in a four-hue family)
+assets/brand/          The NOVA mark and wordmark
+scripts/               Build, package, verify and re-brand passes
+publish/               The built bundle and the download
+```
+
+Each application is layered the same way: a model and an engine at the bottom, a command registry
+in the middle, and a thin UI crate on top that can be swapped. The UI never owns behaviour: it
+reads state and dispatches command ids.
+
+**Everything is a command.** The ribbon, the menus, the keyboard shortcuts, the command palette,
+the CLI, the MCP server and the JSON control channel all dispatch by the same id. A behaviour
+cannot exist in one surface and be missing from another.
+
+---
+
+## The two decisions that shaped it
+
+### The home screen is its own program
+
+NOVA Desk is a separate WPF application, not a view inside one of the four. The four applications
+keep their own windows, their own file associations and their own processes, so NOVA Desk can
+start any of them, be replaced, or be skipped: each application still opens files from Explorer
+on its own.
+
+### The home screen does not look like Windows
+
+A gradient hero panel, four app cards with their own gradient tiles, a hover lift with a coloured
+glow, a violet halo behind the hero and a custom title bar. The one screen every user sees
+carries the identity.
+
+### The identity is NOVA's throughout
+
+The four applications no longer wear another product's chrome. Every window uses the NOVA mark
+and the NOVA palette — a warm paper light theme, a deep-ink dark theme, the NOVA violet accent —
+and the application icons are a matched family: the white NOVA mark on per-app NOVA gradients.
+The built-in samples are NOVA's own — The Open Studio Field Guide (NOVA Write), the Workshop
+Budget, Studio Retail Dashboard and Workshop Register workbooks (NOVA Grid) and the Welcome to
+the Open Studio deck (NOVA Deck). The internal Rust module names remain; nothing on screen
+renders them.
+
+---
+
+## Nothing leaves the machine
+
+- The update-checking subsystem was **removed** from all four applications, not merely switched
+  off: the dependency is gone from every manifest, the constants are deleted, the start-up check
+  and the self-update helper are gone.
+- Help ▸ Check for Updates still works. It answers locally that this copy does not check for
+  updates.
+- No link in any interface leaves the app. The About boxes, the Help menus, the contributor
+  lists, the CLI metadata and the MCP server metadata carry no address.
+- Only the links inside the user's own documents follow, as they should.
+
+---
+
+## What was verified, and how
+
+### The bundle scans clean
+
+`scripts\Scan-NovaBundle.ps1` reads every shipped binary — ASCII and UTF-16LE — and every shipped
+text file, and fails on another brand name in a person-readable capitalisation, or on any binary
+carrying an address the suite must never offer:
+
+```
+RESULT: the bundle is free of the old brand.
+```
+
+The scan is deliberately honest about one boundary. The cloned engines keep their upstream Rust
+package and module names, so every release binary still carries strings like `wordcraft_engine::`
+in panic locations, log targets, thread names and egui widget ids. Removing those means renaming
+the crates, which would change the engines rather than re-brand the surface — the decision is
+recorded in `DECISIONS.md`. The scan lists them (`=== the binaries: internal Rust crate/module
+stems ===`) instead of hiding them behind a blanket CLEAN. They are not user-visible: no screen,
+dialog or help text renders them, and the addresses sections confirms the binaries carry no link to
+anywhere. What a person does see is clean — the window titles, the About boxes, the file dialogs,
+the in-document fonts and the saved-file properties (e.g. `NOVA Grid` in an xlsx's `appName`).
+
+### Every window starts and says what it should
+
+`scripts\Test-NovaLaunches.ps1` starts NOVA Desk through the launcher `.cmd`, exactly as a user
+double-clicks it, and then each application the way the hub starts them:
+
+```
+  novadesk       RUNNING  NOVA Desk
+  novawrite      RUNNING  NOVA Write
+  novagrid       RUNNING  Book1 — NOVA Grid
+  novadeck       RUNNING  NOVA Deck
+  novapdf        RUNNING  NOVA PDF
+```
+
+### The applications build clean
+
+All four build in release, offline, with zero errors and zero warnings. NOVA Desk builds in
+release with zero errors.
+
+### The breadth is measured, not claimed
+
+Each application ships a `cargo xtask parity` check that compares its feature catalog with its
+live command registry and fails if a claimed feature has no command behind it.
+
+| App | Measure | Result |
+|---|---|---|
+| NOVA Write | Catalog features with a command | 505 / 520 (97.1%) |
+| NOVA Grid | Excel commands implemented | 276 / 292 (94.5%) |
+| NOVA Deck | Weighted breadth parity, 191 features | 84% |
+| NOVA PDF | Acrobat features shipped | 452 shipped, 102 partial |
+
+---
+
+## Known limitations
+
+- **Windows 7 SP1 / 8.1 / 10 / 11, x64.** One set of binaries runs on all four. The four Rust
+  applications are built for `x86_64-win7-windows-msvc` with a static C runtime and a local
+  compatibility crate, and are audited for Windows 8+ imports; NOVA Desk targets .NET Framework
+  4.8, which is in-box on Windows 10 1903+ and Windows 11 and a one-time Windows Update install on
+  Windows 7 SP1 and 8.1. The Windows 11 runtime path is exercised here; the Windows 7 path is
+  verified statically, by import table (`scripts/Test-NovaWin7Imports.ps1` audits all five shipped
+  executables), because no Windows 7 machine is part of the build environment.
+- **The Tamil faces are Madhuram (TAU-Marutham), Hind Madurai, Noto Sans Tamil and Noto Serif
+  Tamil.** Latha is Microsoft's and Bamini is a legacy font that maps Tamil letters onto Latin keys,
+  so neither is bundled; see DECISIONS.md §21 for every name in that request, what ships in its
+  place, and why TAU-Marutham's `fsType = 8` does not stop it.
+- **Tamil typing is on by default, on both of Tamil Nadu's layouts.** That is what "it still comes
+  as English" asked for, and the price is that a keyboard typed on with no Tamil intent produces
+  Tamil: the status bar's chip switches it, and the UI tests that type Latin say so in their own
+  fixtures.
+- **The parity numbers measure breadth, not fidelity.** A command existing does not mean it
+  matches the original in every detail; each application's own `docs/target-app-parity.md` is the
+  honest assessment.
+- **NOVA PDF's text recognition needs its models.** Without them it says so rather than failing
+  quietly.
+- **The update checker is gone for good.** There is no automatic update path in this release.
+  A new suite is a new download.
+
+---
+
+## Provenance and licences
+
+The four engines are clean-room, permissively licensed upstream Rust projects, vendored under
+`reference/`. Each ships its own `LICENSE-APACHE`, `LICENSE-MIT`, `NOTICE` and `ATTRIBUTION.md`,
+and all of them travel in the bundle's `Licenses` folder.
+
+NOVA Desk, the launcher, the installer, the icons and the re-brand work are original to this
+project. **NOVA Workspace as a product is closed-source commercial software**: free for 30 days,
+then ₹6 a month for one person, with the source kept in a private repository. The upstream licence
+texts still travel with the bundle as the law requires — see the repository root's
+`LICENSE-APACHE`, `LICENSE-MIT` and `NOTICE`. The NOVA name and marks are trademarks of the NOVA
+Workspace team; each application's `docs/brand/LICENSE-brand.txt` holds the terms.
+
+No Microsoft, Adobe, Avid or Autodesk iconography, artwork, fonts, templates or themes appear
+anywhere in the suite. Every asset is original, public domain, CC0, or permissively licensed, and
+every one is listed in the attribution file that ships with it.
