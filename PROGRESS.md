@@ -300,6 +300,9 @@ as they are.
       byte-for-byte against the local zip: `Content-Length: 92765065`, `X-NOVA-Parts: 6`,
       SHA-256 `0D5A40F1…2B074494` on both sides. All five executables still pass the Windows 7
       import audit, the old-brand scan and the launch test.
+- [x] The eleven practice words re-typed through the running app after the rebuild
+      (`ui_shot` with real keystrokes, then `document.inspect`): தமிழ் வணக்கம் அம்மா தமிழன்
+      இந்தியா பள்ளி கெ கொழும்பு நூலகம் இலங்கை யாழ்ப்பாணம் - all eleven correct.
 
 ## Not shipped
 
