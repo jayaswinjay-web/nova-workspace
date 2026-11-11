@@ -559,16 +559,29 @@ had no way to express — the font draws them, not the key map:
 * **The front signs are typed *before* their consonant.** `n` (ெ), `N` (ே) and `i` (ை) are drawn
   before the letter they belong to, while Tamil stores them after it. So a front sign is held by
   the session until the key that follows (`Session::tamil_front`), which types its own character
-  first and the sign after it: `if` is கை, `,yq;if` is இலங்கை. Without this the sign lands in
-  front of its consonant and the word reads backwards.
-* **`h` and `s` complete the pair.** `h` after a front sign merges it into ஒ or ஓ (`nfh` = கொ), and `s` completes it into ௌ (`nfs` = கௌ).
-  and `s` completes it into ிff (`nfs` = கௌ).
+  first and the sign after it: `if` is கை, `kfpik` is மகிமை, `,yq;if` is இலங்கை. The sign belongs
+  to the key right after it, so `nts;is` is வெள்ளை and `jPf;i\` is தீக்ஷை. Without this the sign
+  lands in front of its consonant and the word reads backwards. A sign with no consonant after it
+  is typed alone at the next key (as the converter emits it), so it never slides onto the next
+  word's first consonant.
+* **`h` and `s` complete the pair.** `h` after a front sign merges it into ொ or ோ (`nfh` = கொ),
+  and `s` completes it into ௌ (`nfs` = கௌ).
+* **`h` is ர before a ி, ீ or ் sign.** The font draws ர with the ா shape, so a typist presses `h`
+  for either: `h` is ா normally (`fh` = கா) and ர when the next key is `p`, `P` or `;` (`fhp` =
+  கரி, `fh;` = கர், `Fhp` = குரி). The ா/ூ/ொ/ோ is typed at once and corrected on the next key
+  (`Session::tamil_ra`), so typing stays immediate.
+* **`s` is ௌ or ள by the next key.** ௌ is ெ + a consonant + `s`, but the same key is ள, and a
+  vowel sign after it proves that reading: `nfs;` is கெள், `nts;is` is வெள்ளை. The ௌ is typed at
+  once and corrected when a vowel-sign key follows (`Session::tamil_au`); `s` after ே is ள, never
+  ௌ.
+* Any command other than `text.tamilType` ends all three waits (`Session::end_tamil_wait`), so a
+  click, a format change or an undo can never leave a sign to attach to a later word.
 * **`+`, `}` and `h` lengthen the sign before them.** The font draws those three keys as marks on
   the syllable beside them, so `F}` is கூ and `E}` is நூ.
 * **`xs` is ஔ.** The font ligates its ள key after its ஒ key, so the composition replaces the ஒ
   rather than typing ள after it.
 
-The number row carries the whole ூ syllables the font drew there (`#`=சூ, `$`=கூ, `%`=மூ, `^`=டூ, `&`=ரூ, `*`=ழூ), Shift+full stop is the comma (the comma key is இ in this encoding), and `@`=ளூ, `~`=ஷ, `H`=ர் are the special keys the basic sheet never listed. It keeps
+The number row carries the whole ூ syllables the font drew there (`#`=சூ, `$`=கூ, `%`=மூ, `^`=டூ, `&`=ரூ, `*`=ழூ), Shift+full stop is the comma (the comma key is இ in this encoding), the apostrophe keys type the Tamil quotation marks (`'`=“ `"`=” Shift+backslash=’), and `@`=ளூ, `~`=ஷ, `H`=ர் are the special keys the basic sheet never listed. It keeps
 the font's other quirks: the signs sit on their own keys, and the shifted consonant keys give the
 whole syllables the font drew there (`T`=வு, `=`=ஸ்ரீ, `b`=டி).
 
@@ -581,5 +594,11 @@ whole syllables the font drew there (`T`=வு, `=`=ஸ்ரீ, `b`=டி).
   comment; the engine pins the default directly (`tamil_input_is_on_by_default`). The mode's own
   tests leave it on. That is the price of a default that changes what the keyboard produces, and
   it is paid once per test rather than by weakening the default.
+* The typing itself is proven end to end, not only in unit tests: a 69-word sweep through the real
+  app path (a keyboard event through egui to `text.tamilType`) types every word correctly — the
+  owner's seventeen practice words, the common words they reported broken, and the Sanskrit
+  (vada mozhi) letters (`ஸ்ரீ` `ஷண்முகம்` `ஹரி` `ஜனவரி` `விஷ்ணு` `லக்ஷ்மி` `க்ஷேத்ரம்`
+  `நமஸ்காரம்` `ஸ்தலம்` `புஷ்பம்` `கிருஷ்ணா` `சஷ்டி` `ஆஸ்திரேலியா` `ஸ்ரீராமன்` `ஹரிஹரன்`
+  `க்ஷணம்` `தீக்ஷை` `ஜெயம்`).
 
 ---

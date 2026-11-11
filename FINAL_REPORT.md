@@ -31,7 +31,7 @@ It is also served publicly from
 assets, plus a `/download` route that streams the zip out of a **private** GitHub
 release. The GitHub token is a Worker secret; visitors never receive it. The
 streamed file was verified byte-for-byte against the local zip
-(SHA-256 `45D6548A…402A50A3`, 92,765,233 bytes, release v1.0.6).
+(SHA-256 `B9032FFB…9A4D6611`, 92,744,133 bytes, release v1.0.6).
 
 ---
 
@@ -166,10 +166,15 @@ live command registry and fails if a claimed feature has no command behind it.
   Tamil.** Latha is Microsoft's and Bamini is a legacy font that maps Tamil letters onto Latin keys,
   so neither is bundled; see DECISIONS.md §21 for every name in that request, what ships in its
   place, and why TAU-Marutham's `fsType = 8` does not stop it.
-- **Tamil typing is on by default, on both of Tamil Nadu's layouts.** That is what "it still comes
+- **Tamil typing is on by default, on the Bamini layout.** That is what "it still comes
   as English" asked for, and the price is that a keyboard typed on with no Tamil intent produces
   Tamil: the status bar's chip switches it, and the UI tests that type Latin say so in their own
-  fixtures.
+  fixtures. The layout is the one Tamil typists learned first, and it types the way they press
+  it: a front sign attaches to the consonant key right after it, `h` is ர before a ி/ீ/் sign and
+  ா elsewhere, `s` is ௌ or ள by the key after it, and a sign with no consonant after it is typed
+  alone rather than carried into the next word. A 69-word sweep through the running app
+  types every word — the owner's practice words, the words they reported broken, and the Sanskrit
+  letters (ஸ்ரீ, ஷ, ஹ, ஜ, க்ஷ) — correctly.
 - **The parity numbers measure breadth, not fidelity.** A command existing does not mean it
   matches the original in every detail; each application's own `docs/target-app-parity.md` is the
   honest assessment.

@@ -72,7 +72,7 @@ wrangler deploy
 The site is live at **https://nova-workspace.jayaswinjay.workers.dev**. `/download` streams the
 zip out of the private release, so the browser never sees a GitHub token. The streamed file has
 been verified byte-for-byte against `publish\NOVAWorkspace.zip`
-(SHA-256 `3DA00AC1…19ECB5D`, release v1.0.6; v1.0.5 was `BA11FD98…4769D530FD`).
+(SHA-256 `B9032FFB…9A4D6611`, release v1.0.6; v1.0.5 was `BA11FD98…4769D530FD`).
 
 ---
 

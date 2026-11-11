@@ -137,7 +137,7 @@ as they are.
       `TransformStream` was killed with `exceededCpu` at ~85 MB (2010 ms CPU for 42 MB);
       `FixedLengthStream` measured **13 ms CPU for the whole 88 MB**
 - [x] End-to-end verified: the download from the public URL is byte-for-byte the local zip
-      (v1.0.6: SHA-256 `3DA00AC1…19ECB5D`; v1.0.5: `BA11FD98…4769D530FD`)
+      (v1.0.6: SHA-256 `B9032FFB…9A4D6611`; v1.0.5: `BA11FD98…4769D530FD`)
 - [x] The site now prices the product: **30 days free, then ₹6 a month for one person**, with a
       pricing section, a nav link, a rewritten price row in the Microsoft comparison, and three
       new FAQ entries (what happens after day 30, do I need a card, why charge anything at all)
@@ -315,6 +315,32 @@ as they are.
       sides. All five executables still pass the Windows 7 import audit, the old-brand scan and
       the launch test, and the restored keys (`%`, `^`, `&`, `*`, `#`, `>`) were re-verified
       through the running app.
+- [x] **Typing Tamil the way the owner types it: the four rules a typist's hand follows, and the
+      bugs they exposed.** The owner typed their own words and hit real errors (தனஸ்ரீ came out
+      `தன!ரீ` before the `!` fix; then "lots of errors" typing manually). Reading the delivered
+      converter's own rules (`toUnicode`, its `signAsConsonant` and `prefixSigns`/`signs`
+      lookahead) against the owner's sheet found four things the immediate-typing model got wrong:
+      a front sign must attach to the consonant key *right after* it (`nts;is` = வெள்ளை,
+      `jPf;i\` = தீக்ஷை — the old code let a sign slide onto a later consonant, and a dangling
+      sign could reach the next word); `h` is ர before a ி/ீ/் sign (`fhp` = கரி, `Fhp` = குரி)
+      because the font draws ர with the ா shape; `s` is ௌ only when the next key is not a vowel
+      sign (`nfs` = கௌ, `nfs;` = கெள், `nts;is` = வெள்ளை); and the apostrophe keys type the Tamil
+      quotes (`'`=“ `"`=” `|`=’). Each is typed immediately and corrected on the next key
+      (`Session::tamil_ra`, `Session::tamil_au`), and every other command ends the wait
+      (`Session::end_tamil_wait`), so nothing can attach to a later word. Tests: the owner's
+      seventeen practice words, the `h`/`s` lookahead, the front-sign flush, the quotation keys.
+      All suites green (engine 1,119 / UI 1,019 / fonts 105), clippy and rustfmt clean.
+- [x] **The 69-word sweep through the running app: every word correct.** Real keystrokes through
+      `ui_shot` (`ui.text` → the canvas → `text.tamilType`) typed the owner's practice words, the
+      words they reported broken, and the Sanskrit (vada mozhi) letters — ஸ்ரீ ஷண்முகம் ஹரி
+      ஜனவரி விஷ்ணு லக்ஷ்மி க்ஷேத்ரம் நமஸ்காரம் ஸ்தலம் புஷ்பம் கிருஷ்ணா சஷ்டி ஆஸ்திரேலியா
+      ஸ்ரீராமன் ஹரிஹரன் க்ஷணம் தீக்ஷை ஜெயம் — and `document.inspect` read back all 69 exactly as
+      they should be.
+- [x] Zip rebuilt at **92,744,133 bytes** for the typing fixes (`novawrite.exe` 74,478,592), the
+      six parts re-published as release **v1.0.6** with `-Force`, and `/download` verified
+      byte-for-byte against the local zip: `Content-Length: 92744133`, `X-NOVA-Parts: 6`,
+      SHA-256 `B9032FFB…9A4D6611` on both sides. All five executables still pass the Windows 7
+      import audit, the old-brand scan and the launch test.
 
 ## Not shipped
 
