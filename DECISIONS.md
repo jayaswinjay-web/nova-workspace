@@ -384,6 +384,17 @@ the API would have given there (`REGDB_E_CLASSNOTREG` for WinRT, `E_NOTIMPL` for
 renderer, a zero cookie for MTA accounting, and the documented prefix-stripping for PathCch —
 `S_FALSE` when there is no prefix, exactly as the probe of the real DLL showed).
 
+**Why the plain names are release-only.** A raw-dylib import object carries the stubs for a whole
+DLL, so the moment a build references any *other* combase, WinRT or `windows.data.pdf` function the
+linker pulls that object in and it defines these six names as well — `LNK2005` for each, then
+`LNK1169`. That is exactly what happened to `cargo test` on Windows: the development graph
+references more of those DLLs than the shipped release does, so the app binary would not link in
+debug. The shims are therefore exported with `#[cfg_attr(not(debug_assertions), no_mangle)]`: a
+release build (the only one that ships, and the only one that has to run on Windows 7) compiles the
+same `#[no_mangle]` functions it always did, while a debug build keeps them mangled, links against
+the real imports and runs on the build machine, which is Windows 10 or later. `install()` and the
+crate's own tests still call the functions either way.
+
 **Why OpenGL on 7 and 8.1.** wgpu's Windows backend is DirectX 12, which does not exist before
 Windows 10. All four applications now enable eframe's `glow` feature as well, and
 `nova_win7_compat::needs_open_gl()` — `RtlGetVersion` below 10.0 — selects `Renderer::Glow` at

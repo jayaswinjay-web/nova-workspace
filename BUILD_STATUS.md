@@ -106,6 +106,12 @@ entry point it lacks (`WaitOnAddress`, `ProcessPrng`, `GetSystemTimePreciseAsFil
 with `RESULT: every executable loads on Windows 7 SP1 - no Windows 8+ DLL or entry point.` It is the
 audit the Windows 7 claim rests on: the `win7-compat` crate supplies the Windows 8+ entry points the
 dependency tree imports, and this script is what proves they are no longer in the import table.
+Those shims export their plain names only in release (`#[cfg_attr(not(debug_assertions), no_mangle)]`):
+a raw-dylib import object carries a whole DLL's stubs, so a debug build that references any *other*
+combase, WinRT or `windows.data.pdf` function pulls one in and it defines the same names
+(`LNK2005`, then `LNK1169`). Release — the only build that ships, and the only one that must run on
+Windows 7 — compiles exactly what it always did; in debug the shims keep their mangled names, so
+`cargo test` links and the real imports are used on the build machine.
 
 `Scan-NovaBundle.ps1` reads every shipped binary (ASCII and UTF-16LE) and every shipped text file,
 and fails on another brand name in a person-readable capitalisation, or on a binary carrying an
