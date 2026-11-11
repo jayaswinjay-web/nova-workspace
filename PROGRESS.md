@@ -303,6 +303,18 @@ as they are.
 - [x] The eleven practice words re-typed through the running app after the rebuild
       (`ui_shot` with real keystrokes, then `document.inspect`): தமிழ் வணக்கம் அம்மா தமிழன்
       இந்தியா பள்ளி கெ கொழும்பு நூலகம் இலங்கை யாழ்ப்பாணம் - all eleven correct.
+- [x] **The `!` question was settled by the sources, and five shift forms came back with it.**
+      The owner typed தனஸ்ரீ and got a literal `!`: they pressed
+      Shift+1, which their own workbook and the web's standard Bamini table both leave literal —
+      each maps ஸ்ரீ to `=` alone, which ships and works. The same check against
+      the sheet and the web table restored five keys the map had lost (`#`=சூ, `%`=மூ, `^`=டூ, `&`=ரூ, `*`=ழூ) and the comma (`>`=`,`, because the comma key is இ
+      in this encoding). All suites green (engine 1,115 / UI 1,019 / fonts 105), clippy clean.
+- [x] Zip rebuilt at **92,765,233 bytes** for the shift-form fix, the six parts re-published as
+      release **v1.0.6** with `-Force`, and `/download` verified byte-for-byte against the local
+      zip: `Content-Length: 92765233`, `X-NOVA-Parts: 6`, SHA-256 `45D6548A…402A50A3` on both
+      sides. All five executables still pass the Windows 7 import audit, the old-brand scan and
+      the launch test, and the restored keys (`%`, `^`, `&`, `*`, `#`, `>`) were re-verified
+      through the running app.
 
 ## Not shipped
 

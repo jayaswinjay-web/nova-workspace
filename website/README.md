@@ -156,6 +156,6 @@ Get-FileHash verify.zip -Algorithm SHA256
 Get-FileHash D:\wrkspasce\publish\NOVAWorkspace.zip -Algorithm SHA256
 ```
 
-The two hashes must match. They did on 2026-11-10 for release v1.0.6
-(`0D5A40F1…2B074494`, `Content-Length: 92765065`, `X-NOVA-Parts: 6`; the same check for v1.0.5
+The two hashes must match. They did on 2026-11-11 for release v1.0.6
+(`45D6548A…402A50A3`, `Content-Length: 92765233`, `X-NOVA-Parts: 6`; the same check for v1.0.5
 gave `BA11FD98…4769D530FD`).

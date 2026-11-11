@@ -551,7 +551,9 @@ and `gs;sp` = பள்ளி, all pinned by a test. Two of the sheet's rows are
 `jkpod;`, and `gs;sp` read as பாளி).
 
 **The font's key-order rules were the real work, and only the owner's second document showed
-them.** A complete workbook listing every printable key spelled out four rules the first table
+them.**
+
+**`=` is the ஸ்ரீ key, and only that.** The owner pressed Shift+1 (`!`) for ஸ்ரீ and got a literal `!`, so both sources were checked: their own workbook leaves `!` literal (its ஸ்ரீ row is `=`), and the web's standard Bamini table has no `!` entry at all. They agree, and the app follows them. A complete workbook listing every printable key spelled out four rules the first table
 had no way to express — the font draws them, not the key map:
 
 * **The front signs are typed *before* their consonant.** `n` (ெ), `N` (ே) and `i` (ை) are drawn
@@ -566,7 +568,7 @@ had no way to express — the font draws them, not the key map:
 * **`xs` is ஔ.** The font ligates its ள key after its ஒ key, so the composition replaces the ஒ
   rather than typing ள after it.
 
-Three keys the basic sheet never listed are in the table too (`@`=ளூ, `~`=ஷ, `H`=ர்). It keeps
+The number row carries the whole ூ syllables the font drew there (`#`=சூ, `$`=கூ, `%`=மூ, `^`=டூ, `&`=ரூ, `*`=ழூ), Shift+full stop is the comma (the comma key is இ in this encoding), and `@`=ளூ, `~`=ஷ, `H`=ர் are the special keys the basic sheet never listed. It keeps
 the font's other quirks: the signs sit on their own keys, and the shifted consonant keys give the
 whole syllables the font drew there (`T`=வு, `=`=ஸ்ரீ, `b`=டி).
 

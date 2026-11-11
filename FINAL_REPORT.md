@@ -31,7 +31,7 @@ It is also served publicly from
 assets, plus a `/download` route that streams the zip out of a **private** GitHub
 release. The GitHub token is a Worker secret; visitors never receive it. The
 streamed file was verified byte-for-byte against the local zip
-(SHA-256 `0D5A40F1…2B074494`, 92,765,065 bytes, release v1.0.6).
+(SHA-256 `45D6548A…402A50A3`, 92,765,233 bytes, release v1.0.6).
 
 ---
 
