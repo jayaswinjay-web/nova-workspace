@@ -613,3 +613,36 @@ whole syllables the font drew there (`T`=வு, `=`=ஸ்ரீ, `b`=டி).
   `க்ஷணம்` `தீக்ஷை` `ஜெயம்`).
 
 ---
+
+## 22. Platform packages: one suite, six downloads
+
+**Decision.** Every supported platform gets its own zip under the same release version, served by
+`/download?platform=...`. The Windows x64 package stays the only one that includes NOVA Desk; the
+other packages carry the four applications and say so in their `README.txt`.
+
+| Package | Built with | Runs on |
+|---|---|---|
+| `NOVAWorkspace.zip` | `x86_64-win7-windows-msvc` + `build-std` | Windows 7 SP1 / 8.1 / 10 / 11, x64 |
+| `NOVAWorkspace-win-x86.zip` | `i686-pc-windows-msvc` | Windows 10 / 11, 32-bit |
+| `NOVAWorkspace-win-arm64.zip` | `aarch64-pc-windows-msvc` | Windows 11 ARM64 |
+| `NOVAWorkspace-macos-intel.zip` | `x86_64-apple-darwin` | macOS, Intel |
+| `NOVAWorkspace-macos-apple-silicon.zip` | `aarch64-apple-darwin` | macOS, Apple Silicon |
+| `NOVAWorkspace-ubuntu.zip` | `x86_64-unknown-linux-gnu` | Ubuntu / Linux, x64 |
+
+**Windows x86 is Windows 10/11 only.** The 32-bit PDF engine imports `combase.dll`,
+`windows.data.pdf.dll` and the WinRT core API set, which do not exist on Windows 7. The Win7 shim
+cannot close that gap on i686 either: a whole-DLL import object conflicts with the shim's
+`no_mangle` exports (`LNK2005`/`LNK1169`), so the x86 target links without the shim. Windows 7
+users stay on the x64 package, which is where Win7 support is proven.
+
+**Every other package is built by CI.** `.github/workflows/build-and-release.yml`
+clones the four NOVA snapshot repositories (`nova-wordcraft`, `nova-gridcraft`, `nova-deckcraft`,
+`nova-pdfcraft`) into `reference/` and builds on GitHub-hosted runners: `windows-latest` for ARM64,
+`ubuntu-latest` for Linux, `macos-15` and `macos-15-intel` for macOS. The workflow is also the
+only practical macOS build path: there is no macOS SDK or Xcode on the development machine.
+The macOS packages are unsigned and unnotarized, and their README says how to clear the
+quarantine attribute. The Linux package is built and checked locally in a Debian container as
+well, which is how the GTK3/X11 runtime dependency in its README was verified.
+
+**The local x86 build needs NASM.** `pdfcraft` pulls `aws-lc-rs`, whose assembly build fails on
+i686 without NASM on `PATH`; the CI jobs install it with `choco`/`apt`/`brew` for the same reason.
