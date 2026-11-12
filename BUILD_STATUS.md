@@ -51,17 +51,20 @@ the four applications need nothing installed at all.
 | `NOVAWorkspace.zip` | Windows 7 SP1–11, x64 | published (v1.0.7) |
 | `NOVAWorkspace-win-x86.zip` | Windows 10/11, 32-bit | published (v1.0.7) |
 | `NOVAWorkspace-ubuntu.zip` | Ubuntu/Linux, x64 | published (v1.0.7) |
-| `NOVAWorkspace-win-arm64.zip` | Windows 11 ARM64 | CI build |
-| `NOVAWorkspace-macos-intel.zip` | macOS Intel | CI build |
-| `NOVAWorkspace-macos-apple-silicon.zip` | macOS Apple Silicon | CI build |
+| `NOVAWorkspace-win-arm64.zip` | Windows 11 ARM64 | published (v1.0.7) |
+| `NOVAWorkspace-macos-intel.zip` | macOS Intel | published (v1.0.7) |
+| `NOVAWorkspace-macos-apple-silicon.zip` | macOS Apple Silicon | published (v1.0.7) |
 
 The x86 package is built with `i686-pc-windows-msvc` and runs on Windows 10/11 only: the PDF
 engine imports WinRT and `windows.data.pdf`, which do not exist on Windows 7 x86. Windows 7
 support remains on the x64 package. The ARM64, macOS and Linux packages contain the four
 applications but not NOVA Desk, which is a .NET Framework WPF launcher.
 
-`.github/workflows/build-and-release.yml` builds the remaining packages on GitHub runners and
-uploads them to the same release; it clones the NOVA snapshot repositories into `reference/`.
+`.github/workflows/build-and-release.yml` builds the ARM64, macOS and Linux packages on GitHub
+runners and uploads them to the same release; it clones the NOVA snapshot repositories into
+`reference/`. Run it with `gh workflow run build-and-release.yml -f tag=v1.0.7 -f publish=true`
+to rebuild them. The macOS packages are unsigned and unnotarized; their README gives the one-time
+`xattr -dr com.apple.quarantine` step.
 
 ### Current bundle
 
