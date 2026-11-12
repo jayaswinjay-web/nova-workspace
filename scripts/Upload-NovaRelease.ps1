@@ -47,6 +47,7 @@ Write-Host ("Source : {0} ({1:N1} MB)" -f $zip, ($zipLen / 1MB))
 Write-Host ("Parts  : {0} x {1} MB" -f $partCount, $PartMB)
 
 # ── split ────────────────────────────────────────────────────────────────────
+$baseName = [System.IO.Path]::GetFileName($zip) # e.g. NOVAWorkspace.zip or NOVAWorkspace-win-x86.zip
 $partDir = Join-Path $env:TEMP ("nova-parts-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $partDir | Out-Null
 Write-Host "Splitting into $partDir"
@@ -55,7 +56,7 @@ $in = [System.IO.File]::OpenRead($zip)
 try {
     $buffer = New-Object byte[] (4MB)
     for ($i = 1; $i -le $partCount; $i++) {
-        $name = 'NOVAWorkspace.zip.part{0:D2}' -f $i
+        $name = '{0}.part{1:D2}' -f $baseName, $i
         $path = Join-Path $partDir $name
         $out = [System.IO.File]::Create($path)
         try {
@@ -82,16 +83,10 @@ function Get-Release {
             "NOVA Workspace - the office suite that is not Microsoft.",
             "",
             "Free for 30 days, then 6 rupees per month for one person.",
-            "Unzip anywhere and double-click Start NOVA Desk.vbs.",
+            "Unzip anywhere and double-click Start NOVA Desk.vbs (Windows packages).",
             "",
-            "NOVA Write ships Tamil: the Madhuram (TAU-Marutham) typefaces are",
-            "bundled with the suite, and Tamil input mode builds Tamil letters",
-            "on any keyboard with the Bamini layout Tamil typists learned, on",
-            "by default.",
-            "",
-            "The zip is published as byte-range parts (NOVAWorkspace.zip.partNN).",
-            "Concatenated in name order they are the original zip; the download",
-            "Worker on the website streams them back as one file."
+            "Downloads may be published as platform zips and/or byte-range parts (*.zip.partNN).",
+            "Concatenated in name order, parts are the original zip; the website Worker streams them as one file."
         ) -join "`n"
         $notesFile = Join-Path $env:TEMP ("nova-notes-" + [guid]::NewGuid().ToString('N') + ".md")
         [System.IO.File]::WriteAllText($notesFile, $notes, (New-Object System.Text.UTF8Encoding($false)))
