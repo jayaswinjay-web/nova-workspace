@@ -44,6 +44,25 @@ There is no bundled runtime. NOVA Desk runs on .NET Framework 4.8, which is buil
 (1903 and later) and Windows 11 and installs once through Windows Update on Windows 7 SP1 and 8.1;
 the four applications need nothing installed at all.
 
+## Platform packages
+
+| Package | Target | State |
+|---|---|---|
+| `NOVAWorkspace.zip` | Windows 7 SP1–11, x64 | published (v1.0.7) |
+| `NOVAWorkspace-win-x86.zip` | Windows 10/11, 32-bit | published (v1.0.7) |
+| `NOVAWorkspace-ubuntu.zip` | Ubuntu/Linux, x64 | published (v1.0.7) |
+| `NOVAWorkspace-win-arm64.zip` | Windows 11 ARM64 | CI build |
+| `NOVAWorkspace-macos-intel.zip` | macOS Intel | CI build |
+| `NOVAWorkspace-macos-apple-silicon.zip` | macOS Apple Silicon | CI build |
+
+The x86 package is built with `i686-pc-windows-msvc` and runs on Windows 10/11 only: the PDF
+engine imports WinRT and `windows.data.pdf`, which do not exist on Windows 7 x86. Windows 7
+support remains on the x64 package. The ARM64, macOS and Linux packages contain the four
+applications but not NOVA Desk, which is a .NET Framework WPF launcher.
+
+`.github/workflows/build-and-release.yml` builds the remaining packages on GitHub runners and
+uploads them to the same release; it clones the NOVA snapshot repositories into `reference/`.
+
 ### Current bundle
 
 | | |
