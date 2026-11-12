@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag (e.g. v1.0.8)"
+        description: "Release tag (e.g. v1.0.7)"
         required: true
         type: string
       publish:
-        description: "Upload assets to GitHub release"
+        description: "Upload assets to the GitHub release"
         required: false
-        default: false
+        default: true
         type: boolean
   push:
     tags:
@@ -23,55 +23,42 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -C target-feature=+crt-static
 
+# App sources live in separate NOVA snapshot repositories and are cloned into
+# reference/<name> so their Cargo path dependency on ../../../../win7-compat
+# resolves inside this checkout.
 jobs:
-  windows:
-    name: Windows (${{ matrix.platform }})
+  windows-arm64:
+    name: Windows (win-arm64)
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: win-x64
-            target: x86_64-win7-windows-msvc
-            rust_toolchain: nightly
-            use_build_std: true
-            asset_base: NOVAWorkspace
-            include_novadesk: true
-          - platform: win-x86
-            target: i686-pc-windows-msvc
-            rust_toolchain: stable
-            use_build_std: false
-            asset_base: NOVAWorkspace-win-x86
-            include_novadesk: false
-          - platform: win-arm64
-            target: aarch64-pc-windows-msvc
-            rust_toolchain: stable
-            use_build_std: false
-            asset_base: NOVAWorkspace-win-arm64
-            include_novadesk: false
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Clone app sources
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repos = @{ 'wordcraft' = 'novawrite'; 'gridcraft' = 'novagrid'; 'deckcraft' = 'novadeck'; 'pdfcraft' = 'novapdf' }
+          foreach ($name in $repos.Keys) {
+            git clone --depth 1 "https://github.com/${{ github.repository_owner }}/nova-$name.git" "reference/$name"
+            if ($LASTEXITCODE -ne 0) { throw "clone failed: $name" }
+          }
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ matrix.rust_toolchain }}
-          targets: ${{ matrix.target }}
+          targets: aarch64-pc-windows-msvc
 
-      - name: Install NASM (for i686/arm64 deps like aws-lc-sys)
+      - name: Install NASM
         shell: pwsh
         run: |
           choco install nasm -y --no-progress
-          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build NOVA apps
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $env:LIB = ''
-          $env:CARGO_NET_OFFLINE = 'false'
           $apps = @(
             @{ repo='reference/wordcraft'; pkg='novawrite'; bin='novawrite.exe' },
             @{ repo='reference/gridcraft';  pkg='novagrid';  bin='novagrid.exe'  },
@@ -79,49 +66,33 @@ jobs:
             @{ repo='reference/pdfcraft';  pkg='novapdf';   bin='novapdf.exe'   }
           )
           foreach ($a in $apps) {
-            $args = @('build','--release','--manifest-path',"$($a.repo)/Cargo.toml",'--target','${{ matrix.target }}','-p',$a.pkg)
-            if ('${{ matrix.use_build_std }}' -eq 'true') { $args = @('+nightly') + $args + @('-Z','build-std=std,panic_abort') }
-            cargo @args
+            cargo build --release --manifest-path "$($a.repo)/Cargo.toml" --target aarch64-pc-windows-msvc -p $a.pkg
+            if ($LASTEXITCODE -ne 0) { throw "build failed: $($a.pkg)" }
           }
-
-      - name: Setup .NET (for NOVA Desk)
-        if: matrix.include_novadesk
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Publish NOVA Desk
-        if: matrix.include_novadesk
-        shell: pwsh
-        run: |
-          $out = "publish/${{ matrix.asset_base }}"
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          dotnet publish src/Nova.Hub/Nova.Hub.csproj -c Release -o "$out/hub"
-          Copy-Item "$out/hub/novadesk.exe" "$out/novadesk.exe" -Force
-          if (Test-Path "$out/hub/novadesk.exe.config") { Copy-Item "$out/hub/novadesk.exe.config" "$out/novadesk.exe.config" -Force }
-          Remove-Item "$out/hub" -Recurse -Force
 
       - name: Assemble package
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $out = "publish/${{ matrix.asset_base }}"
+          $out = "publish/NOVAWorkspace-win-arm64"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
-          $bins = @('novawrite.exe','novagrid.exe','novadeck.exe','novapdf.exe')
-          foreach ($b in $bins) {
-            $found = Get-ChildItem "reference" -Recurse -File -Filter $b | Where-Object { $_.FullName -like "*\target\${{ matrix.target }}\release\*" } | Select-Object -First 1
-            if (-not $found) { throw "Missing $b for ${{ matrix.target }}" }
+          foreach ($b in @('novawrite.exe','novagrid.exe','novadeck.exe','novapdf.exe')) {
+            $found = Get-ChildItem "reference" -Recurse -File -Filter $b | Where-Object { $_.FullName -like "*\target\aarch64-pc-windows-msvc\release\*" } | Select-Object -First 1
+            if (-not $found) { throw "Missing $b" }
             Copy-Item $found.FullName (Join-Path $out $b) -Force
           }
-          if (Test-Path 'README.md') { Copy-Item README.md (Join-Path $out 'README.txt') -Force }
-          "Start NOVA Desk.vbs or run app executables directly." | Set-Content -Path (Join-Path $out 'README.txt') -Encoding UTF8
-          Compress-Archive -Path (Join-Path $out '*') -DestinationPath "publish/${{ matrix.asset_base }}.zip" -Force
+          @(
+            'NOVA Workspace (Windows ARM64 build)',
+            '- Includes NOVA Write/Grid/Deck/PDF binaries for Windows on ARM (Windows 11 ARM64).',
+            '- NOVA Desk (Windows launcher) is not included in this package.',
+            '- Run the app executables directly.'
+          ) | Set-Content -Path (Join-Path $out 'README.txt') -Encoding UTF8
+          Compress-Archive -Path (Join-Path $out '*') -DestinationPath "publish/NOVAWorkspace-win-arm64.zip" -Force
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset_base }}
-          path: publish/${{ matrix.asset_base }}.zip
+          name: NOVAWorkspace-win-arm64
+          path: publish/NOVAWorkspace-win-arm64.zip
 
       - name: Publish release asset
         if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
@@ -132,27 +103,41 @@ jobs:
           $tag = '${{ inputs.tag }}'
           if (-not $tag -and '${{ github.ref_type }}' -eq 'tag') { $tag = '${{ github.ref_name }}' }
           if (-not $tag) { throw 'No release tag provided' }
-          gh release view $tag --repo ${{ github.repository }} *> $null; if ($LASTEXITCODE -ne 0) { gh release create $tag --repo ${{ github.repository }} --draft --title "NOVA Workspace $tag" --notes "Automated platform build" }
-          gh release upload $tag "publish/${{ matrix.asset_base }}.zip" --repo ${{ github.repository }} --clobber
+          gh release view $tag --repo ${{ github.repository }} *> $null
+          if ($LASTEXITCODE -ne 0) { gh release create $tag --repo ${{ github.repository }} --title "NOVA Workspace $tag" --notes "Platform builds" }
+          gh release upload $tag "publish/NOVAWorkspace-win-arm64.zip" --repo ${{ github.repository }} --clobber
 
   linux:
     name: Ubuntu x64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Clone app sources
+        run: |
+          set -euo pipefail
+          for name in wordcraft gridcraft deckcraft pdfcraft; do
+            git clone --depth 1 "https://github.com/${{ github.repository_owner }}/nova-$name.git" "reference/$name"
+          done
+
       - uses: dtolnay/rust-toolchain@stable
+
       - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev nasm
+          sudo apt-get install -y pkg-config libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev nasm cmake clang \
+            libfontconfig1-dev libfreetype6-dev libasound2-dev libudev-dev libwayland-dev \
+            libxrandr-dev libxi-dev libxcursor-dev libgl1-mesa-dev libegl1-mesa-dev zip
+
       - name: Build NOVA apps
         run: |
+          set -euo pipefail
           for spec in "reference/wordcraft:novawrite" "reference/gridcraft:novagrid" "reference/deckcraft:novadeck" "reference/pdfcraft:novapdf"; do
             IFS=: read -r repo pkg <<< "$spec"
             cargo build --release --manifest-path "$repo/Cargo.toml" -p "$pkg"
           done
+
       - name: Assemble package
         run: |
           set -euo pipefail
@@ -165,25 +150,29 @@ jobs:
             chmod +x "$out/$bin"
           done
           cat > "$out/README.txt" <<'EOF'
-NOVA Workspace (Ubuntu/Linux build)
-- Includes NOVA Write/Grid/Deck/PDF binaries.
-- NOVA Desk (Windows launcher) is not included on Linux.
-- Ensure required desktop/runtime libraries are installed on your system.
-EOF
+          NOVA Workspace (Ubuntu/Linux x64 build)
+          - Includes NOVA Write, Grid, Deck and PDF binaries.
+          - NOVA Desk (Windows launcher) is not included on Linux.
+          - Requires a desktop session with OpenGL and the usual GTK3/X11 runtime libraries.
+          - Run: ./novawrite | ./novagrid | ./novadeck | ./novapdf
+          EOF
           (cd publish && zip -r NOVAWorkspace-ubuntu.zip NOVAWorkspace-ubuntu)
+
       - uses: actions/upload-artifact@v4
         with:
           name: NOVAWorkspace-ubuntu
           path: publish/NOVAWorkspace-ubuntu.zip
+
       - name: Publish release asset
         if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           tag="${{ inputs.tag }}"
           if [ -z "$tag" ] && [ "${{ github.ref_type }}" = "tag" ]; then tag="${{ github.ref_name }}"; fi
-          if [ -z "$tag" ]; then echo "No release tag provided"; exit 1; fi
-          gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$tag" --repo "${{ github.repository }}" --draft --title "NOVA Workspace $tag" --notes "Automated platform build"
+          test -n "$tag"
+          gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$tag" --repo "${{ github.repository }}" --title "NOVA Workspace $tag" --notes "Platform builds"
           gh release upload "$tag" "publish/NOVAWorkspace-ubuntu.zip" --repo "${{ github.repository }}" --clobber
 
   macos:
@@ -203,17 +192,29 @@ EOF
             asset_base: NOVAWorkspace-macos-apple-silicon
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Clone app sources
+        run: |
+          set -euo pipefail
+          for name in wordcraft gridcraft deckcraft pdfcraft; do
+            git clone --depth 1 "https://github.com/${{ github.repository_owner }}/nova-$name.git" "reference/$name"
+          done
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      - name: Install deps
+        run: brew install nasm
+
       - name: Build NOVA apps
         run: |
+          set -euo pipefail
           for spec in "reference/wordcraft:novawrite" "reference/gridcraft:novagrid" "reference/deckcraft:novadeck" "reference/pdfcraft:novapdf"; do
             IFS=: read -r repo pkg <<< "$spec"
             cargo build --release --manifest-path "$repo/Cargo.toml" -p "$pkg" --target "${{ matrix.target }}"
           done
+
       - name: Assemble package
         run: |
           set -euo pipefail
@@ -226,23 +227,28 @@ EOF
             chmod +x "$out/$bin"
           done
           cat > "$out/README.txt" <<'EOF'
-NOVA Workspace (macOS build)
-- Includes NOVA Write/Grid/Deck/PDF binaries.
-- NOVA Desk (Windows launcher) is not included on macOS.
-- This CI package is unsigned/unnotarized unless signing steps are added.
-EOF
+          NOVA Workspace (macOS build)
+          - Includes NOVA Write, Grid, Deck and PDF binaries.
+          - NOVA Desk (Windows launcher) is not included on macOS.
+          - This build is unsigned and unnotarized. If Gatekeeper blocks it, run:
+              xattr -dr com.apple.quarantine <folder>
+            or right-click the app binary and choose Open.
+          EOF
           (cd publish && zip -r "${{ matrix.asset_base }}.zip" "${{ matrix.asset_base }}")
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_base }}
           path: publish/${{ matrix.asset_base }}.zip
+
       - name: Publish release asset
         if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           tag="${{ inputs.tag }}"
           if [ -z "$tag" ] && [ "${{ github.ref_type }}" = "tag" ]; then tag="${{ github.ref_name }}"; fi
-          if [ -z "$tag" ]; then echo "No release tag provided"; exit 1; fi
-          gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$tag" --repo "${{ github.repository }}" --draft --title "NOVA Workspace $tag" --notes "Automated platform build"
+          test -n "$tag"
+          gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$tag" --repo "${{ github.repository }}" --title "NOVA Workspace $tag" --notes "Platform builds"
           gh release upload "$tag" "publish/${{ matrix.asset_base }}.zip" --repo "${{ github.repository }}" --clobber

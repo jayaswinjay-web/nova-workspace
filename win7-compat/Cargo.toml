@@ -1,0 +1,13 @@
+[package]
+name = "nova-win7-compat"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "Windows 7 compatibility layer for NOVA Workspace: forwards the Windows 8+ entry points the dependency tree imports, and supplies Windows 7 behaviour when they are absent."
+publish = false
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
