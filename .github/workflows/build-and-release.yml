@@ -21,7 +21,6 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: -C target-feature=+crt-static
 
 # App sources live in separate NOVA snapshot repositories and are cloned into
 # reference/<name> so their Cargo path dependency on ../../../../win7-compat
@@ -59,6 +58,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $env:LIB = ''
+          $env:RUSTFLAGS = '-C target-feature=+crt-static'
           $apps = @(
             @{ repo='reference/wordcraft'; pkg='novawrite'; bin='novawrite.exe' },
             @{ repo='reference/gridcraft';  pkg='novagrid';  bin='novagrid.exe'  },
@@ -183,11 +183,11 @@ jobs:
       matrix:
         include:
           - platform: macos-intel
-            runner: macos-13
+            runner: macos-15-intel
             target: x86_64-apple-darwin
             asset_base: NOVAWorkspace-macos-intel
           - platform: macos-apple-silicon
-            runner: macos-14
+            runner: macos-15
             target: aarch64-apple-darwin
             asset_base: NOVAWorkspace-macos-apple-silicon
     steps:
